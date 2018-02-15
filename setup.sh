@@ -59,12 +59,9 @@ del_default_user(){
 update_sys(){
 	echo '>>>Updating the system'
 	sleep 1
-	echo '#!/bin/bash' > /etc/cron.weekly/autoupdt
-	echo -e "apt-get update\napt-get -y upgrade" >> /etc/cron.weekly/autoupdt
-	echo -e "apt-get -y dist-upgrade\napt-get clean" >> /etc/cron.weekly/autoupdt
-	echo -e "apt-get -y autoremove" >> /etc/cron.weekly/autoupdt
-	chmod +x /etc/cron.weekly/autoupdt
-	/etc/cron.weekly/autoupdt
+	chmod +x autoupdt.sh
+	mv autoupdt.sh /etc/cron.weekly/autoupdt.sh
+	/etc/cron.weekly/autoupdt.sh
 	echo
 	echo '>>>Done with update. System will update weekly. See /etc/cron.weekly/autoupdt'
 	echo
@@ -296,26 +293,10 @@ wol_nginx(){
 	apt-get install wakeonlan
 	wol_setup1
 	wol_setup2
-	echo 'location /wakeup/ {' > WoL_location_block
-	echo '        alias /var/www/wol/;' >> WoL_location_block
-	echo '        index index.php index.html index.htm;' >> WoL_location_block
-	echo '        location ~ \.php$ {' >> WoL_location_block
-	echo '                fastcgi_split_path_info ^(.+\.php)(/.+)$;' >> WoL_location_block
-	echo '                try_files $fastcgi_script_name =404;' >> WoL_location_block
-	echo '                set $path_info $fastcgi_path_info;' >> WoL_location_block
-	echo '                fastcgi_param PATH_INFO $path_info;' >> WoL_location_block
-	echo '                fastcgi_index index.php;' >> WoL_location_block
-	echo '                include fastcgi_params;' >> WoL_location_block
-	echo '                fastcgi_param SCRIPT_FILENAME $request_filename;' >> WoL_location_block
-	echo '                fastcgi_pass unix:/run/php/php7.0-fpm.sock; #might need to change this' >> WoL_location_block
-	echo '        }' >> WoL_location_block
-	echo '        try_files $uri index.php;' >> WoL_location_block
-	echo '}' >> WoL_location_block
 	
 	echo '---WoL Server---' >> results.txt
-	echo 'WoL Nginx location block example saved to WoL_location_block' >> results.txt
+	echo 'WoL Nginx location block example saved to WoL_nginx_example' >> results.txt
 	echo  >> results.txt
-	
 	echo '>>>Done with WoL server'
 	echo
 	sleep 2
