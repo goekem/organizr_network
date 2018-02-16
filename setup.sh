@@ -113,9 +113,9 @@ org_subdomain(){
                 echo "Could not find $vardomain nginx configuration file, try again..."
         done
 
-        read -p 'What would you like the organizr domain to be (sub.example.com)? ' varsubdom
+        read -p 'What would you like the organizr domain to be (sub.domain.com)? ' varsubdom
         replace_domain="server_name $varsubdom localhost;"
-        sed -i 's/server_name.*host;/'$replace_domain'/' $vardomain.conf
+        sed -i "s/server_name.*host;/$replace_domain/" /etc/nginx/sites-enabled/$vardomain.conf
 }
 
 #Install Organizer/Nginx/PHP
@@ -549,11 +549,6 @@ after_reboot(){
 
 	if [[ $INSTALL_LETSENCRYPT = true ]]; then
 		letsencrypt
-	fi
-
-	read -p 'Would you like to set up organizr (recommended)(y/n)? ' varinput
-	if [[ $varinput =~ ^[Yy]$ ]]; then
-		org_setup
 	fi
 
 	wrap_up
