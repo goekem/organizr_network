@@ -108,8 +108,8 @@ org_subdomain(){
 	#set up the subdomain
         while true
         do
-                read -p 'Enter your domain/organizr install folder (domain.local)' vardomain
-                [ -f /etc/nginx/site-enabled/$vardomain.conf ] && break
+                read -p 'Enter your domain/organizr install folder (domain.local): ' vardomain
+                [ -f /etc/nginx/sites-enabled/$vardomain.conf ] && break
                 echo "Could not find $vardomain nginx configuration file, try again..."
         done
 
