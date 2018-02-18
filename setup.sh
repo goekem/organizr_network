@@ -164,8 +164,9 @@ guac_install(){
 
 	#Select guac functionality
 	local options=("RDP" "SSH" "Telnet" "VNC" "VNC Audio" "Recordings" "SSL/TLS" "Audio Compression" "WebP")
-	to_install="apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev mysql-server \
-		mysql-client mysql-common mysql-utilities libmysql-java ${TOMCAT} freerdp-x11 ghostscript wget dpkg-dev "
+	to_install="apt -y install build-essential libcairo2-dev \${JPEGTURBO} \${LIBPNG} libossp-uuid-dev "
+	to_install="$to_install mysql-server  mysql-client mysql-common mysql-utilities libmysql-java \${TOMCAT} "
+	to_install="$to_install freerdp-x11 ghostscript wget dpkg-dev "
 
 	#function to print the menu
 	menu() {
