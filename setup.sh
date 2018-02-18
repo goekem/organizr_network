@@ -164,8 +164,8 @@ guac_install(){
 
 	#Select guac functionality
 	local options=("RDP" "SSH" "Telnet" "VNC" "VNC Audio" "Recordings" "SSL/TLS" "Audio Compression" "WebP")
-	to_install="apt -y install build-essential libcairo2-dev \${JPEGTURBO} \${LIBPNG} libossp-uuid-dev "
-	to_install="$to_install mysql-server  mysql-client mysql-common mysql-utilities libmysql-java \${TOMCAT} "
+	to_install="apt -y install build-essential libcairo2-dev \${JPEGTURBO} \${LIBPNG} libossp-uuid-dev"
+	to_install="$to_install mysql-server mysql-client mysql-common mysql-utilities libmysql-java \${TOMCAT}"
 	to_install="$to_install freerdp-x11 ghostscript wget dpkg-dev "
 
 	#function to print the menu
@@ -226,7 +226,8 @@ guac_install(){
 
 	#Change dependencies
 	echo '>>>Replacing dependencies'
-	perl -i -pe 'BEGIN{undef $/;} s/apt -y install build-essential.*dpkg-dev/'"${to_install}"'/smg' guac-install.sh
+	esc_depend=$(printf '%s\n' "$to_install" | sed 's:[$]:\\$:g')
+	perl -i -pe 'BEGIN{undef $/;} s/apt -y install build-essential.*dpkg-dev/'"$esc_depend"'/smg' guac-install.sh
 
 	./guac-install.sh
 	echo '---Guacamole---' >> results.txt
