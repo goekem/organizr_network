@@ -18,6 +18,7 @@ INSTALL_WOL_SERVER=false
 INSTALL_LETSENCRYPT=false
 INSTALL_NGINX=false
 REBOOT_NEEDED=false
+prompt="Check an option (again to uncheck, ENTER when done): "
 
 #Create a new sudo user
 create_user(){
@@ -156,8 +157,13 @@ guac_install(){
 	#Expand to include raspbian
 	sed -i 's/\[\[ "\${NAME}" == \*"Debian"\* \]\]/[[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]/' guac-install.sh
 
+	#Clear last menu variables
+	unset num
+	unset msg
+	unset choices
+
 	#Select guac functionality
-	options=("RDP" "SSH" "Telnet" "VNC" "VNC Audio" "Recordings" "SSL/TLS" "Audio Compression" "WebP")
+	local options=("RDP" "SSH" "Telnet" "VNC" "VNC Audio" "Recordings" "SSL/TLS" "Audio Compression" "WebP")
 	to_install="apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev mysql-server \
 		mysql-client mysql-common mysql-utilities libmysql-java ${TOMCAT} freerdp-x11 ghostscript wget dpkg-dev "
 
@@ -172,7 +178,6 @@ guac_install(){
 
 	#start with a clean prompt
 	clear
-	prompt="Check an option (again to uncheck, ENTER when done): "
 
 	while menu && read -rp "$prompt" num && [[ "$num" ]]; do
 		clear
@@ -410,7 +415,7 @@ wrap_up(){
 }
 
 before_reboot(){
-	options=("Create new sudo user" "Enable SSH" "Update system")
+	local options=("Create new sudo user" "Enable SSH" "Update system")
 	#function to print the menu
 	menu() {
 		echo "What would you like to do?"
@@ -421,7 +426,6 @@ before_reboot(){
 	}
 
 	clear
-	prompt="Check an option (again to uncheck, ENTER when done): "
 
 	while menu && read -rp "$prompt" num && [[ "$num" ]]; do
 		clear
@@ -472,7 +476,13 @@ before_reboot(){
 }
 
 after_reboot(){
-	options=("Delete default user" "Install Organizr" "Install Guacamole" "Install Wake-On-LAN Server" "Install Certbot (Let's Encrypt)" "Nginx (included with organizr)")
+	local options=("Delete default user" "Install Organizr" "Install Guacamole" "Install Wake-On-LAN Server" "Install Certbot (Let's Encrypt)" "Nginx (included with organizr)")
+
+	#Clear last menu variables
+        unset num
+        unset msg
+        unset choices
+
 	#function to print the menu
 	menu() {
 		echo "What would you like to do?"
@@ -483,7 +493,6 @@ after_reboot(){
 	}
 
 	clear
-	prompt="Check an option (again to uncheck, ENTER when done): "
 
 	while menu && read -rp "$prompt" num && [[ "$num" ]]; do
 		clear
