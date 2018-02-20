@@ -239,11 +239,36 @@ guac_install(){
 	sleep 2
 }
 
+#Install nginx
+nginx_install(){
+        echo '>>>Installing nginx'
+
+        #Get nix flavor and version
+        source /etc/os-release
+        if [[ "${NAME}" == *"Debian"* ]]; then
+                if [[ $PRETTY_NAME = *"squeeze"* ]]; then
+                        echo 'deb http://nginx.org/packages/debian/ squeeze nginx' >> /etc/apt/sources.list.d/nginx.$
+                        echo 'deb-src http://nginx.org/packages/debian/ squeeze nginx' >> /etc/apt/sources.list.d/ng$
+                fi
+        elif [[ "${NAME}" == "Ubuntu" ]]; then
+                read -p 'What release are you using (e.g. xenial)? ' varinput
+                echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.list
+                echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.li$
+        fi
+
+        sudo apt-get update
+        sudo apt-get install -y nginx
+
+        echo '>>>Done with nginx'
+        echo
+        sleep 2
+}
+
 #Install wake on lan server
 wol_setup1(){
 	chmod u+s `which ping`
 	git clone https://github.com/sciguy14/Remote-Wake-Sleep-On-LAN-Server.git
-	mkdir /var/www/wol
+	mkdir -p /var/www/wol
 }
 wol_setup2(){
 	mv Remote-Wake-Sleep-On-LAN-Server/* /var/www/wol
@@ -303,7 +328,12 @@ wol_apache(){
 }
 wol_nginx(){
 	echo '>>>Installing WoL server'
-	apt-get install wakeonlan
+	dpkg -s nginx > /dev/null
+        if [ $? -ne 0 ]; then
+                nginx_install
+        fi
+
+	apt-get install -y wakeonlan php-fpm
 	wol_setup1
 	wol_setup2
 
@@ -369,31 +399,6 @@ letsencrypt(){
 	fi
 
 	echo '>>>Done with Certbot (letsencrypt)'
-	echo
-	sleep 2
-}
-
-#Install nginx
-nginx_install(){
-	echo '>>>Installing nginx'
-
-	#Get nix flavor and version
-	source /etc/os-release
-	if [[ "${NAME}" == *"Debian"* ]]; then
-		if [[ $PRETTY_NAME = *"squeeze"* ]]; then
-			echo 'deb http://nginx.org/packages/debian/ squeeze nginx' >> /etc/apt/sources.list.d/nginx.list
-			echo 'deb-src http://nginx.org/packages/debian/ squeeze nginx' >> /etc/apt/sources.list.d/nginx.list
-		fi
-	elif [[ "${NAME}" == "Ubuntu" ]]; then
-		read -p 'What release are you using (e.g. xenial)? ' varinput
-		echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.list
-		echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.list
-	fi
-
-	sudo apt-get update
-	sudo apt-get install nginx
-
-	echo '>>>Done with nginx'
 	echo
 	sleep 2
 }
@@ -478,7 +483,7 @@ before_reboot(){
 }
 
 after_reboot(){
-	local options=("Delete default user" "Install Organizr" "Install Guacamole" "Install Wake-On-LAN Server" "Install Certbot (Let's Encrypt)" "Nginx (included with organizr)")
+	local options=("Delete default user" "Install Organizr" "Install Guacamole" "Install Wake-On-LAN Server" "Install Certbot (Let's Encrypt)" "Install Nginx (included with Organizr)")
 
 	#Clear last menu variables
         unset num
@@ -550,7 +555,7 @@ after_reboot(){
 	if [[ $INSTALL_WOL_SERVER = true ]]; then
 		echo 'Setting up the WoL server...'
 		echo 'I support nginx or apache. Organizr comes configured for nginx'
-		read -p 'Which are you using (a or n)?' varserver
+		read -p 'Which are you using (a or n)? ' varserver
 		if [[ $varserver =~ ^[Aa]$ ]]; then
 			wol_apache
 		else
