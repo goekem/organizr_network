@@ -298,7 +298,7 @@ wol_setup2(){
 
 	read -p 'Please enter the IP address: ' compIP
 	echo
-	sed -i 's/190.*0.2/'$compIP'/' /var/www/wol/config.php
+	sed -i 's/190.*0\.2/'$compIP'/' /var/www/wol/config.php
 }
 wol_apache(){
 	echo '>>>Installing WoL server'

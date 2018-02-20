@@ -1,15 +1,12 @@
 location /wakeup/ {
-        alias /var/www/wol/;
-        index index.php index.html index.htm;
-        location ~ \.php$ {
-                fastcgi_split_path_info ^(.+\.php)(/.+)$;
-                try_files $fastcgi_script_name =404;
-                set $path_info $fastcgi_path_info;
-                fastcgi_param PATH_INFO $path_info;
-                fastcgi_index index.php;
-                include fastcgi_params;
-                fastcgi_param SCRIPT_FILENAME $request_filename;
-                fastcgi_pass unix:/run/php/php7.0-fpm.sock; #might need to change this
-        }
-        try_files $uri index.php;
+	alias /var/www/wol/;
+	index index.php;
+	# pass PHP scripts to FastCGI server
+	location ~ \.php$ {
+		include snippets/fastcgi-php.conf;
+		include fastcgi_params;
+		# With php-fpm (or other unix sockets):
+		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+		fastcgi_param SCRIPT_FILENAME $request_filename;
+	}
 }
