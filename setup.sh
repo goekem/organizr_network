@@ -338,7 +338,7 @@ wol_nginx(){
 	wol_setup2
 
 	echo '---WoL Server---' >> results.txt
-	echo 'WoL Nginx location block example saved to WoL_nginx_example' >> results.txt
+	echo 'WoL Nginx location block example in domain.com.conf' >> results.txt
 	echo  >> results.txt
 	echo '>>>Done with WoL server'
 	echo
