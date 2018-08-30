@@ -251,7 +251,7 @@ nginx_install(){
                         echo 'deb-src http://nginx.org/packages/debian/ squeeze nginx' >> /etc/apt/sources.list.d/ng$
                 fi
         elif [[ "${NAME}" == "Ubuntu" ]]; then
-                read -p 'What release are you using (e.g. xenial)? ' varinput
+                read -p 'What release are you using (e.g. bionic)? ' varinput
                 echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.list
                 echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.li$
         fi
