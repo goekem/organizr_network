@@ -5,15 +5,7 @@
 
 #Run as sudo
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
-
-#This supports debian 10 based systems because they changed so much I don't have time to cover more
-#You can help expand by submitting a pull request
-source /etc/os-release
-if ! [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]; then
-	echo "Only Debian 10 is officially supported."; exit 1 ;
-elif ! [[ $PRETTY_NAME = *"buster"* ]]; then
-	echo "Only Debian 10 is officially supported."; exit 1 ;
-fi
+#This supports debian or ubuntu 9 or 10 based systems
 
 #Track requested services
 CREATE_USER=false
@@ -98,9 +90,9 @@ org_ssl(){
 		done
 	fi
 
-	sed -i 's:/etc.*pem;:'${cert_location[0]}':' ${DOMAIN_NAME}.conf
-	sed -i 's:/etc.*key;:'${cert_location[1]}':' ${DOMAIN_NAME}.conf
-	sed -i 's/#ssl_cert/ssl_cert/g' ${DOMAIN_NAME}.conf
+	sed -i 's:/etc.*pem;:'${cert_location[0]}':' $DOMAIN_NAME.conf
+	sed -i 's:/etc.*key;:'${cert_location[1]}':' $DOMAIN_NAME.conf
+	sed -i 's/#ssl_cert/ssl_cert/g' $DOMAIN_NAME.conf
 
 	echo '>>>Server SSL updated'
 	sleep 1
@@ -115,13 +107,13 @@ org_subdomain(){
                 if [[ $DOMAIN_NAME = "domain.com" ]]; then
 			read -p 'Enter your domain (domain.local): ' DOMAIN_NAME
 		fi
-                [ -f ${DOMAIN_NAME}.conf ] && break
-                echo 'Could not find '${DOMAIN_NAME}'.conf nginx conf file in this folder, try again...'
+                [ -f $DOMAIN_NAME.conf ] && break
+                echo 'Could not find '$DOMAIN_NAME'.conf nginx conf file in this folder, try again...'
         done
 
         read -p 'What would you like the organizr domain to be (sub.domain.com)? ' varsubdom
         replace_domain="server_name $varsubdom localhost;"
-        sed -i 's/server_name.*host;/'${replace_domain}'/' ${DOMAIN_NAME}.conf
+        sed -i 's/server_name.*host;/'$replace_domain'/' $DOMAIN_NAME.conf
 }
 
 #Install Organizer/Nginx/PHP
@@ -140,8 +132,8 @@ organizer_install(){
 	sed -i 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php/7.3/fpm/php.ini
 	systemctl restart php7.3-fpm
 
-	git clone https://github.com/causefx/Organizr /var/www/websites/org.${DOMAIN_NAME}
-	chown -R www-data:www-data /var/www/websites/org.${DOMAIN_NAME}/
+	git clone https://github.com/causefx/Organizr /var/www/websites/org.$DOMAIN_NAME
+	chown -R www-data:www-data /var/www/websites/org.$DOMAIN_NAME/
 
 	read -p 'Would you like to set up Organizr on a subdomain (y/n)? ' varinput
 	if [[ $varinput =~ ^[Yy]$ ]]; then
@@ -149,7 +141,7 @@ organizer_install(){
 	fi
 
 	echo '---Organizr---' >> results.txt
-	echo 'Install directory: /var/www/websites/org.'${DOMAIN_NAME} >> results.txt
+	echo 'Install directory: /var/www/websites/org.'$DOMAIN_NAME >> results.txt
 #	echo 'Organizr files stored: /var/www/domain.local/html' >> results.txt
 #	echo 'Organizr db directory: /var/www/domain.local/db' >> results.txt
 #	echo 'Use the above db path when setting up admin user' >> results.txt
@@ -165,10 +157,10 @@ organizer_install(){
 guac_install(){
 	echo '>>>Installing guacamole'
 	sleep 5
-#	wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-install.sh
+	wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-install.sh
 	chmod +x guac-install.sh
 	#Expand to include raspbian
-#	sed -i 's/\[\[ "\${NAME}" == \*"Debian"\* \]\]/[[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]/' guac-install.sh
+	sed -i 's/\[\[ "\${NAME}" == \*"Debian"\* \]\]/[[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]/' guac-install.sh
 
 	#Clear last menu variables
 	unset num
@@ -177,9 +169,9 @@ guac_install(){
 
 	#Select guac functionality
 	local options=("RDP" "SSH" "Telnet" "VNC" "VNC Audio" "Recordings" "SSL/TLS" "Audio Compression" "WebP")
-	to_install='apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} libpng-dev libossp-uuid-dev'
-	to_install=$to_install' default-mysql-client default-mysql-server libmysql-java ${TOMCAT} '
-	to_install=$to_install' freerdp2-x11 ghostscript wget dpkg-dev '
+	to_install="apt-get -y install build-essential libcairo2-dev \${JPEGTURBO} \${LIBPNG} libossp-uuid-dev"
+	to_install="$to_install /${MYSQL} libmysql-java \${TOMCAT}"
+	to_install="$to_install freerdp-x11 ghostscript wget dpkg-dev "
 
 	#function to print the menu
 	menu() {
@@ -283,8 +275,8 @@ nginx_install(){
 	if [[ $DOMAIN_NAME = "domain.com" ]]; then
                 read -p 'Enter your domain name (domain.local): ' DOMAIN_NAME
         fi
-	mv domain.com.conf ${DOMAIN_NAME}.conf
-	sed -i 's/domain.com/'${DOMAIN_NAME}'/' ${DOMAIN_NAME}.conf
+	mv domain.com.conf $DOMAIN_NAME.conf
+	sed -i 's/domain.com/'$DOMAIN_NAME'/' $DOMAIN_NAME.conf
 	rm -f nginx_signing.key
 
 	#Change NGINX service user to www-data to maintain compatability with php
@@ -316,17 +308,17 @@ wol_setup2(){
 		echo "Passwords don't match. Please try again."
 		echo
 	done
-	wolhash="$(echo -n "${wolPass}" | sha256sum | awk '{print $1}')"
-	sed -i 's/YOUR.*HERE/'${wolhash}'/' /var/www/websites/wol/config.php
+	wolhash="$(echo -n "$wolPass" | sha256sum | awk '{print $1}')"
+	sed -i 's/YOUR.*HERE/'$wolhash'/' /var/www/websites/wol/config.php
 
 	echo 'For the computer you would like to wake up:'
 	read -p 'Please enter the computer name: ' compName
 	echo
-	sed -i 's/computer1.*ter2/'${compName}'/' /var/www/websites/wol/config.php
+	sed -i 's/computer1.*ter2/'$compName'/' /var/www/websites/wol/config.php
 
 	read -p 'Please enter the MAC address(XX:XX): ' compMAC
 	echo
-	sed -i 's/00:00:00:00:00:00.*00:00:00:00:00:00/'${compMAC}'/' /var/www/websites/wol/config.php
+	sed -i 's/00:00:00:00:00:00.*00:00:00:00:00:00/'$compMAC'/' /var/www/websites/wol/config.php
 
 	read -p 'Please enter the IP address: ' compIP
 	echo
