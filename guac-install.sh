@@ -1,6 +1,7 @@
 #!/bin/bash
-#Script courtesy of Chase Wright with modification by goekem
-#https://github.com/MysticRyuujin/guac-install for original
+
+# Check if user is root or sudo
+if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
 GUACVERSION="1.0.0"
@@ -81,12 +82,36 @@ fi
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
 
-#Need stretch repo for correct version of freeRDP
-echo 'deb http://deb.debian.org/debian/ stretch main' >> /etc/apt/sources.list
-echo 'deb-src http://deb.debian.org/debian/ stretch main' >> /etc/apt/sources.list
-
-JPEGTURBO="libjpeg62-turbo-dev"
-LIBPNG="libpng-dev" #or libpng12-dev
+# Ubuntu and Debian have different package names for libjpeg
+# Ubuntu and Debian versions have differnet package names for libpng-dev
+# Ubuntu 18.04 does not include universe repo by default
+source /etc/os-release
+if [[ "${NAME}" == "Ubuntu" ]]
+then
+    JPEGTURBO="libjpeg-turbo8-dev"
+    if [[ "${VERSION_ID}" == "18.04" ]]
+    then
+        sed -i 's/bionic main$/bionic main universe/' /etc/apt/sources.list
+    fi
+    if [[ "${VERSION_ID}" == "16.04" ]]
+    then
+        LIBPNG="libpng12-dev"
+    else
+        LIBPNG="libpng-dev"
+    fi
+elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]
+then
+    JPEGTURBO="libjpeg62-turbo-dev"
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]]
+    then
+        LIBPNG="libpng-dev"
+    else
+        LIBPNG="libpng12-dev"
+    fi
+else
+    echo "Unsupported Distro - Ubuntu or Debian Only"
+    exit 1
+fi
 
 # Update apt so we can search apt-cache for newest tomcat version supported
 apt-get -qq update
@@ -103,7 +128,7 @@ fi
 
 if [ -z $(command -v mysql) ]
 then
-    MYSQL="default-mysql-server default-mysql-client mysql-common mysql-utilities"
+    MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
 else
     MYSQL=""
 fi

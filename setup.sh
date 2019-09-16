@@ -10,9 +10,9 @@ if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 
 #You can help expand by submitting a pull request
 source /etc/os-release
 if ! [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]; then
-	echo "Only Debian 10 is officially supported."; exit 1 ;
-elif ! [[ $PRETTY_NAME = *"buster"* ]]; then
-	echo "Only Debian 10 is officially supported."; exit 1 ;
+	echo "Only Debian 9 is officially supported."; exit 1 ;
+elif ! [[ $PRETTY_NAME = *"stretch"* ]]; then
+	echo "Only Debian 9 is officially supported."; exit 1 ;
 fi
 
 #Track requested services
@@ -54,7 +54,7 @@ enable_ssh(){
 	sleep 2
 }
 
-#Remove default "pi" user
+#Remove default "pi" user if using raspbian
 del_default_user(){
 	echo '>>>Deleting default user'
 	read -p 'What is the default user? ' varinput
@@ -150,9 +150,6 @@ organizer_install(){
 
 	echo '---Organizr---' >> results.txt
 	echo 'Install directory: /var/www/websites/org.'${DOMAIN_NAME} >> results.txt
-#	echo 'Organizr files stored: /var/www/domain.local/html' >> results.txt
-#	echo 'Organizr db directory: /var/www/domain.local/db' >> results.txt
-#	echo 'Use the above db path when setting up admin user' >> results.txt
 	echo 'Update your nginx conf and visit http://localhost to finish setup' >> results.txt
 	echo >> results.txt
 
@@ -192,21 +189,14 @@ nginx_install(){
                         echo 'deb-src http://nginx.org/packages/debian/ stretch nginx' >> /etc/apt/sources.list
                 fi
 
-		if [[ $PRETTY_NAME = *"buster"* ]]; then
-                        echo 'deb http://nginx.org/packages/debian/ buster nginx' >> /etc/apt/sources.list
-                        echo 'deb-src http://nginx.org/packages/debian/ buster nginx' >> /etc/apt/sources.list
-                fi
         elif [[ "${NAME}" == "Ubuntu" ]]; then
-<<<<<<< HEAD
 		echo "NGINX supports Ubuntu releases 16.04 (xenial), 18.04 (bionic), 18.10 (cosmic), and 19.04 (disco)"
                 read -p 'What release are you using (e.g. disco)? ' varinput
                 echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list
                 echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list
-=======
                 read -p 'What release are you using (e.g. xenial)? ' varinput
                 echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.list
                 echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.li$
->>>>>>> parent of 8ac6e0f... Update setup.sh
         fi
 
 	apt-get remove nginx-common
@@ -342,9 +332,6 @@ letsencrypt(){
 	#Get nix flavor and version
 	source /etc/os-release
 	if [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]; then
-		if [[ $PRETTY_NAME = *"buster"* ]]; then
-			apt-get -y install python-certbot-nginx
-			finish
 		elif [[ $PRETTY_NAME = *"stretch"* ]]; then
 			echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
 			apt-get update
