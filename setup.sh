@@ -20,7 +20,6 @@ INSTALL_LETSENCRYPT=false
 INSTALL_NGINX=false
 REBOOT_NEEDED=false
 prompt="Press the number and enter to check an option (again to uncheck, ENTER when done): "
-DOMAIN_NAME="domain.com"
 
 #Create a new sudo user
 create_user(){
@@ -97,9 +96,9 @@ org_ssl(){
 		done
 	fi
 
-	sed -i 's:/etc.*pem;:'${cert_location[0]}':' $DOMAIN_NAME.conf
-	sed -i 's:/etc.*key;:'${cert_location[1]}':' $DOMAIN_NAME.conf
-	sed -i 's/#ssl_cert/ssl_cert/g' $DOMAIN_NAME.conf
+	sed -i 's:/etc.*pem;:'${cert_location[0]}':' $vardomain.conf
+	sed -i 's:/etc.*key;:'${cert_location[1]}':' $vardomain.conf
+	sed -i 's/#ssl_cert/ssl_cert/g' $vardomain.conf
 
 	echo '>>>Server SSL updated'
 	sleep 1
@@ -111,32 +110,28 @@ org_subdomain(){
 	#set up the subdomain
         while true
         do
-                if [[ $DOMAIN_NAME = "domain.com" ]]; then
-			read -p 'Enter your domain/organizr install folder (domain.local): ' DOMAIN_NAME
-		fi
-                [ -f /etc/nginx/conf.d/$DOMAIN_NAME.conf ] && break
-                echo "Could not find $DOMAIN_NAME nginx configuration file, try again..."
+                read -p 'Enter your domain/organizr install folder (domain.local): ' vardomain
+                [ -f /etc/nginx/sites-enabled/$vardomain.conf ] && break
+                echo "Could not find $vardomain nginx configuration file, try again..."
         done
 
         read -p 'What would you like the organizr domain to be (sub.domain.com)? ' varsubdom
         replace_domain="server_name $varsubdom localhost;"
-        sed -i "s/server_name.*host;/$replace_domain/" /etc/nginx/conf.d/$DOMAIN_NAME.conf
+        sed -i "s/server_name.*host;/$replace_domain/" /etc/nginx/sites-enabled/$vardomain.conf
 }
 
 #Install Organizer/Nginx/PHP
 organizer_install(){
 	echo ">>>Installing Organizr, Nginx, and/or PHP. See https://docs.organizr.app/books/installation for installation guide"
 	sleep 5
-	if [[ $DOMAIN_NAME = "domain.com" ]]; then
-		read -p 'Enter your domain name (domain.local): ' DOMAIN_NAME
-	fi
+	read -p 'Enter your domain name (domain.local): ' vardomain
 	apt-get install git
 
 	#install dependencies
-	apt-get install -y php7.3-mysql php7.3-sqlite3 sqlite3 php7.3-xml php7.3-zip openssl php7.3-curl
+	apt-get install -y php7.1-mysql php7.1-sqlite3 sqlite3 php7.1-xml php7.1-zip openssl php7.1-curl
 
-	git clone https://github.com/causefx/Organizr /var/www/websites/org.$DOMAIN_NAME
-	chown -R www-data:www-data /var/www/websites/org.$DOMAIN_NAME/
+	git clone https://github.com/causefx/Organizr /var/www/websites/$vardomain
+	chown -R www-data:www-data /var/www/websites/$vardomain/
 
 	read -p 'Would you like to set up Organizr on a subdomain [nginx only] (y/n)? ' varinput
 	if [[ $varinput =~ ^[Yy]$ ]]; then
@@ -144,12 +139,12 @@ organizer_install(){
 	fi
 
 	echo '---Organizr---' >> results.txt
-	echo 'Install directory: /var/www/websites/org.'$DOMAIN_NAME >> results.txt
-#	echo 'Organizr files stored: /var/www/domain.local/html' >> results.txt
-#	echo 'Organizr db directory: /var/www/domain.local/db' >> results.txt
-#	echo 'Use the above db path when setting up admin user' >> results.txt
+	echo 'Install directory: /var/www/websites/'$vardomain >> results.txt
+	#echo 'Organizr files stored: /var/www/domain.local/html' >> results.txt
+	#echo 'Organizr db directory: /var/www/domain.local/db' >> results.txt
+	#echo 'Use the above db path when setting up admin user' >> results.txt
 	echo 'Visit http://localhost to finish setup' >> results.txt
-	echo 'You will still need to edit /etc/nginx/conf.d/'$DOMAIN_NAME'.conf to add services'
+	echo 'You will still need to edit /etc/nginx/site-enabled/'$vardomain'.conf to add services'
 	echo '-This is also where you will tell nginx where your SSL certs are located'
 	echo >> results.txt
 
@@ -277,11 +272,7 @@ nginx_install(){
         apt-get update
         apt-get install -y nginx
 	nginx
-	if [[ $DOMAIN_NAME = "domain.com" ]]; then
-                read -p 'Enter your domain name (domain.local): ' DOMAIN_NAME
-        fi
-	cp domain.com.conf /etc/nginx/conf.d/$DOMAIN_NAME.conf
-	echo 'Copied template nginx conf file to /etc/nginx/conf.d/' >> results.txt
+
         echo '>>>Done with nginx'
         echo
         sleep 2
@@ -291,12 +282,12 @@ nginx_install(){
 wol_setup1(){
 	chmod u+s `which ping`
 	git clone https://github.com/sciguy14/Remote-Wake-Sleep-On-LAN-Server.git
-	mkdir -p /var/www/websites/wol
+	mkdir -p /var/www/wol
 }
 wol_setup2(){
-	mv Remote-Wake-Sleep-On-LAN-Server/* /var/www/websites/wol
+	mv Remote-Wake-Sleep-On-LAN-Server/* /var/www/wol
 	rm -rf Remote-Wake-Sleep-On-LAN-Server/
-	mv /var/www/websites/wol/config_sample.php /var/www/websites/wol/config.php
+	mv /var/www/wol/config_sample.php /var/www/wol/config.php
 	while true
 	do
 		read -s -p 'Please enter a password for WoL: ' wolPass
@@ -308,20 +299,20 @@ wol_setup2(){
 		echo
 	done
 	wolhash="$(echo -n "$wolPass" | sha256sum | awk '{print $1}')"
-	sed -i 's/YOUR.*HERE/'$wolhash'/' /var/www/websites/wol/config.php
+	sed -i 's/YOUR.*HERE/'$wolhash'/' /var/www/wol/config.php
 
 	echo 'For the computer you would like to wake up:'
 	read -p 'Please enter the computer name: ' compName
 	echo
-	sed -i 's/computer1.*ter2/'$compName'/' /var/www/websites/wol/config.php
+	sed -i 's/computer1.*ter2/'$compName'/' /var/www/wol/config.php
 
 	read -p 'Please enter the MAC address(XX:XX): ' compMAC
 	echo
-	sed -i 's/00:00:00:00:00:00.*00:00:00:00:00:00/'$compMAC'/' /var/www/websites/wol/config.php
+	sed -i 's/00:00:00:00:00:00.*00:00:00:00:00:00/'$compMAC'/' /var/www/wol/config.php
 
 	read -p 'Please enter the IP address: ' compIP
 	echo
-	sed -i 's/"19.*0\.2"/"'$compIP'"/' /var/www/websites/wol/config.php
+	sed -i 's/"19.*0\.2"/"'$compIP'"/' /var/www/wol/config.php
 }
 wol_apache(){
 	echo '>>>Installing WoL server'
@@ -337,7 +328,7 @@ wol_apache(){
 	sed -i.bak "s/ServerSignature On/ServerSignature Off/g" /etc/apache2/conf-available/security.conf
 	sed -i.bak "s/ServerTokens OS/ServerTokens Prod/g" /etc/apache2/conf-available/security.conf
 	service apache2 restart
-	mv Remote-Wake-Sleep-On-LAN-Server/.htaccess /var/www/websites/wol
+	mv Remote-Wake-Sleep-On-LAN-Server/.htaccess /var/www/wol
 
 	wol_setup2
 
@@ -576,7 +567,6 @@ after_reboot(){
         fi
 
 	if [[ $INSTALL_ORGANIZR = true ]]; then
-		mkdir -p /var/www/websites
 		organizer_install
 	fi
 
@@ -586,7 +576,6 @@ after_reboot(){
 
 	if [[ $INSTALL_WOL_SERVER = true ]]; then
 		echo 'Setting up the WoL server...'
-		mkdir -p /var/www/websites
 		echo 'I support nginx or apache. Organizr comes configured for nginx'
 		read -p 'Which are you using (a or n)? ' varserver
 		if [[ $varserver =~ ^[Aa]$ ]]; then
