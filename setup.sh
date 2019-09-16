@@ -505,7 +505,7 @@ before_reboot(){
 }
 
 after_reboot(){
-	local options=("Delete default user" "Install Nginx" "Install Guacamole" "Install Wake-On-LAN Server" "Install Certbot (Let's Encrypt)" "Install Organizr")
+	local options=("Delete default user" "Install Organizr" "Install Guacamole" "Install Wake-On-LAN Server" "Install Certbot (Let's Encrypt)" "Install Nginx (included with Organizr)")
 
 	#Clear last menu variables
         unset num
@@ -540,7 +540,7 @@ after_reboot(){
 					DELETE_USER=true
 					;;
 				1)
-					INSTALL_NGINX=true
+					INSTALL_ORGANIZR=true
 					;;
 				2)
 					INSTALL_GUACAMOLE=true
@@ -552,7 +552,7 @@ after_reboot(){
 					INSTALL_LETSENCRYPT=true
 					;;
 				5)
-					INSTALL_ORGANIZR=true
+					INSTALL_NGINX=true
 					;;
 			esac
 		}
@@ -562,12 +562,12 @@ after_reboot(){
 		del_default_user
 	fi
 
-	if [[ $INSTALL_NGINX = true ]]; then
-                nginx_install
-        fi
-
 	if [[ $INSTALL_ORGANIZR = true ]]; then
 		organizer_install
+	fi
+
+	if [[ $INSTALL_NGINX = true ]]; then
+		nginx_install
 	fi
 
 	if [[ $INSTALL_GUACAMOLE = true ]]; then
