@@ -2,10 +2,11 @@
 
 #Auto fix organizr to subdomain
 #figure out order of ssl certs LE and ORG
+#host on github and include pulls for other resources
 
 #Run as sudo
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
-#This supports debian or ubuntu 9 or 10 based systems
+#This supports debian or ubuntu based systems
 
 #Track requested services
 CREATE_USER=false
@@ -105,15 +106,15 @@ org_subdomain(){
         while true
         do
                 if [[ $DOMAIN_NAME = "domain.com" ]]; then
-			read -p 'Enter your domain (domain.local): ' DOMAIN_NAME
+			read -p 'Enter your domain/organizr install folder (domain.local): ' DOMAIN_NAME
 		fi
-                [ -f $DOMAIN_NAME.conf ] && break
-                echo 'Could not find '$DOMAIN_NAME'.conf nginx conf file in this folder, try again...'
+                [ -f /etc/nginx/conf.d/$DOMAIN_NAME.conf ] && break
+                echo "Could not find $DOMAIN_NAME nginx configuration file, try again..."
         done
 
         read -p 'What would you like the organizr domain to be (sub.domain.com)? ' varsubdom
         replace_domain="server_name $varsubdom localhost;"
-        sed -i 's/server_name.*host;/'$replace_domain'/' $DOMAIN_NAME.conf
+        sed -i "s/server_name.*host;/$replace_domain/" /etc/nginx/conf.d/$DOMAIN_NAME.conf
 }
 
 #Install Organizer/Nginx/PHP
@@ -129,13 +130,13 @@ organizer_install(){
 	apt-get install -y php7.3-fpm php7.3-mysql php7.3-sqlite3 sqlite3 php7.3-xml php7.3-zip openssl php7.3-curl
 
 	#PHP security upgrade
-	sed -i 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php/7.3/fpm/php.ini
+	sed -i 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php/7.0/fpm/php.ini
 	systemctl restart php7.3-fpm
 
 	git clone https://github.com/causefx/Organizr /var/www/websites/org.$DOMAIN_NAME
 	chown -R www-data:www-data /var/www/websites/org.$DOMAIN_NAME/
 
-	read -p 'Would you like to set up Organizr on a subdomain (y/n)? ' varinput
+	read -p 'Would you like to set up Organizr on a subdomain [nginx only] (y/n)? ' varinput
 	if [[ $varinput =~ ^[Yy]$ ]]; then
 		org_subdomain
 	fi
@@ -145,7 +146,9 @@ organizer_install(){
 #	echo 'Organizr files stored: /var/www/domain.local/html' >> results.txt
 #	echo 'Organizr db directory: /var/www/domain.local/db' >> results.txt
 #	echo 'Use the above db path when setting up admin user' >> results.txt
-	echo 'Update your nginx conf and visit http://localhost to finish setup' >> results.txt
+	echo 'Visit http://localhost to finish setup' >> results.txt
+	echo 'You will still need to edit /etc/nginx/conf.d/'$DOMAIN_NAME'.conf to add services'
+	echo '-This is also where you will tell nginx where your SSL certs are located'
 	echo >> results.txt
 
 	echo '>>>Done installing Organizr'
@@ -275,14 +278,13 @@ nginx_install(){
 	if [[ $DOMAIN_NAME = "domain.com" ]]; then
                 read -p 'Enter your domain name (domain.local): ' DOMAIN_NAME
         fi
-	mv domain.com.conf $DOMAIN_NAME.conf
-	sed -i 's/domain.com/'$DOMAIN_NAME'/' $DOMAIN_NAME.conf
+	cp domain.com.conf /etc/nginx/conf.d/$DOMAIN_NAME.conf
 	rm -f nginx_signing.key
 
 	#Change NGINX service user to www-data to maintain compatability with php
 	sed -i 's/user  nginx/user  www-data/' /etc/nginx/nginx.conf
 
-	echo 'Template nginx conf file saved with this script' >> results.txt
+	echo 'Copied template nginx conf file to /etc/nginx/conf.d/' >> results.txt
         echo '>>>Done with nginx'
         echo
         sleep 2
