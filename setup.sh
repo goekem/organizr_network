@@ -197,10 +197,16 @@ nginx_install(){
                         echo 'deb-src http://nginx.org/packages/debian/ buster nginx' >> /etc/apt/sources.list
                 fi
         elif [[ "${NAME}" == "Ubuntu" ]]; then
+<<<<<<< HEAD
 		echo "NGINX supports Ubuntu releases 16.04 (xenial), 18.04 (bionic), 18.10 (cosmic), and 19.04 (disco)"
                 read -p 'What release are you using (e.g. disco)? ' varinput
                 echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list
                 echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list
+=======
+                read -p 'What release are you using (e.g. xenial)? ' varinput
+                echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.list
+                echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.li$
+>>>>>>> parent of 8ac6e0f... Update setup.sh
         fi
 
 	apt-get remove nginx-common
