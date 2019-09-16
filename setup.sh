@@ -332,7 +332,7 @@ letsencrypt(){
 	#Get nix flavor and version
 	source /etc/os-release
 	if [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]; then
-		elif [[ $PRETTY_NAME = *"stretch"* ]]; then
+		if [[ $PRETTY_NAME = *"stretch"* ]]; then
 			echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
 			apt-get update
 			apt-get -y install certbot python-certbot-nginx -t stretch-backports
