@@ -166,10 +166,83 @@ guac_install(){
 	echo '>>>Installing guacamole'
 	sleep 5
 #	wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-install.sh
-
 	chmod +x guac-install.sh
-	./guac-install.sh
+	#Expand to include raspbian
+#	sed -i 's/\[\[ "\${NAME}" == \*"Debian"\* \]\]/[[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]/' guac-install.sh
 
+	#Clear last menu variables
+	unset num
+	unset msg
+	unset choices
+
+	#Select guac functionality
+	local options=("RDP" "SSH" "Telnet" "VNC" "VNC Audio" "Recordings" "SSL/TLS" "Audio Compression" "WebP")
+	to_install='apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} libpng-dev libossp-uuid-dev'
+	to_install=$to_install' default-mysql-client default-mysql-server libmysql-java ${TOMCAT} '
+	to_install=$to_install' freerdp2-x11 ghostscript wget dpkg-dev '
+
+	#function to print the menu
+	menu() {
+		echo "Avaliable guacamole options:"
+		for i in ${!options[@]}; do
+			printf "%3d%s) %s\n" $((i+1)) "${choices[i]:- }" "${options[i]}"
+		done
+		[[ "$msg" ]] && echo "$msg"; :
+	}
+
+	#start with a clean prompt
+	clear
+
+	while menu && read -rp "$prompt" num && [[ "$num" ]]; do
+		clear
+		[[ "$num" != *[![:digit:]]* ]] &&
+		(( num > 0 && num <= ${#options[@]} )) ||
+		{ msg="Invalid option: $num"; continue; }
+		((num--)); msg="${options[num]} was ${choices[num]:+un}checked"
+		[[ "${choices[num]}" ]] && choices[num]="" || choices[num]="+"
+	done
+
+	printf "Installation options selected\n";
+	for i in ${!options[@]}; do
+		[[ "${choices[i]}" ]] && {
+			case $i in
+				0)
+					to_install="$to_install libfreerdp-dev "
+					;;
+				1)
+					to_install="$to_install libpango1.0-dev libssh2-1-dev libssl-dev "
+					;;
+				2)
+					to_install="$to_install libpango1.0-dev libtelnet-dev "
+					;;
+				3)
+					to_install="$to_install libvncserver-dev "
+					;;
+				4)
+					to_install="$to_install libpulse-dev "
+					;;
+				5)
+					to_install="$to_install libavcodec-dev libavutil-dev libswscale-dev "
+					;;
+				6)
+					to_install="$to_install libssl-dev "
+					;;
+				7)
+					to_install="$to_install libvorbis-dev "
+					;;
+				8)
+					to_install="$to_install libwebp-dev "
+					;;
+			esac
+		}
+	done
+
+	#Change dependencies
+	echo '>>>Replacing dependencies'
+	esc_depend=$(printf '%s\n' "$to_install" | sed 's:[$]:\\$:g')
+	perl -i -pe 'BEGIN{undef $/;} s/apt-get -y install build-essential.*dpkg-dev/'"$esc_depend"'/smg' guac-install.sh
+
+	./guac-install.sh
 	echo '---Guacamole---' >> results.txt
 	echo 'See server config information here: http://guacamole.apache.org/doc/gug/proxying-guacamole.html' >> results.txt
 	echo >> results.txt
