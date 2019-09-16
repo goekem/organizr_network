@@ -279,10 +279,6 @@ nginx_install(){
                 read -p 'Enter your domain name (domain.local): ' DOMAIN_NAME
         fi
 	cp domain.com.conf /etc/nginx/conf.d/$DOMAIN_NAME.conf
-
-	#Change NGINX service user to www-data to maintain compatability with php
-	sed -i 's/user  nginx/user  www-data/' /etc/nginx/nginx.conf
-
 	echo 'Copied template nginx conf file to /etc/nginx/conf.d/' >> results.txt
         echo '>>>Done with nginx'
         echo
