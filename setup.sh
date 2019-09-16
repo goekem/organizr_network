@@ -294,6 +294,7 @@ wol_nginx(){
 
 	echo '---WoL Server---' >> results.txt
 	echo 'WoL Nginx location block example in domain.com.conf' >> results.txt
+	echo 'Website file root is /var/www/websites/wol' >> results.txt
 	echo  >> results.txt
 	echo '>>>Done with WoL server'
 	echo
