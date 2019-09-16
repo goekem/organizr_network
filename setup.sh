@@ -288,7 +288,7 @@ wol_nginx(){
                 nginx_install
         fi
 
-	apt-get install -y wakeonlan php-fpm
+	apt-get install -y wakeonlan php7.3-fpm
 	wol_setup1
 	wol_setup2
 
