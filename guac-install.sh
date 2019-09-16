@@ -210,7 +210,7 @@ tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 # Make directories
 mkdir -p /etc/guacamole/lib
 # If folder doesn't exist
-if [[ -d "/etc/guacamole/extensions" ]]; then
+if ! [[ -d "/etc/guacamole/extensions" ]]; then
     mkdir -p /etc/guacamole/extensions
 fi
 
