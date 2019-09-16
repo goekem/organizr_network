@@ -5,7 +5,6 @@
 #host on github and include pulls for other resources
 
 #Run as sudo
-if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 #This supports debian or ubuntu based systems
 
 #Track requested services
@@ -19,7 +18,7 @@ INSTALL_WOL_SERVER=false
 INSTALL_LETSENCRYPT=false
 INSTALL_NGINX=false
 REBOOT_NEEDED=false
-prompt="Press the number and enter to check an option (again to uncheck, ENTER when done): "
+prompt="Check an option (again to uncheck, ENTER when done): "
 
 #Create a new sudo user
 create_user(){
@@ -122,16 +121,12 @@ org_subdomain(){
 
 #Install Organizer/Nginx/PHP
 organizer_install(){
-	echo ">>>Installing Organizr, Nginx, and/or PHP. See https://docs.organizr.app/books/installation for installation guide"
+	echo ">>>Installing Organizr, Nginx, and/or PHP. See https://organizr.us/ for installation guide"
 	sleep 5
-	read -p 'Enter your domain name (domain.local): ' vardomain
 	apt-get install git
-
-	#install dependencies
-	apt-get install -y php7.1-mysql php7.1-sqlite3 sqlite3 php7.1-xml php7.1-zip openssl php7.1-curl
-
-	git clone https://github.com/causefx/Organizr /var/www/websites/$vardomain
-	chown -R www-data:www-data /var/www/websites/$vardomain/
+	git clone https://github.com/elmerfdz/OrganizrInstaller /opt/OrganizrInstaller
+	cd /opt/OrganizrInstaller/ubuntu/oui
+	bash ou_installer.sh
 
 	read -p 'Would you like to set up Organizr on a subdomain [nginx only] (y/n)? ' varinput
 	if [[ $varinput =~ ^[Yy]$ ]]; then
@@ -139,12 +134,12 @@ organizer_install(){
 	fi
 
 	echo '---Organizr---' >> results.txt
-	echo 'Install directory: /var/www/websites/'$vardomain >> results.txt
-	#echo 'Organizr files stored: /var/www/domain.local/html' >> results.txt
-	#echo 'Organizr db directory: /var/www/domain.local/db' >> results.txt
-	#echo 'Use the above db path when setting up admin user' >> results.txt
-	echo 'Visit http://localhost to finish setup' >> results.txt
-	echo 'You will still need to edit /etc/nginx/site-enabled/'$vardomain'.conf to add services'
+	echo 'Install directory: /var/www/domain.local' >> results.txt
+	echo 'Organizr files stored: /var/www/domain.local/html' >> results.txt
+	echo 'Organizr db directory: /var/www/domain.local/db' >> results.txt
+	echo 'Use the above db path when setting up admin user' >> results.txt
+	echo 'Visit localhost/ to finish setup' >> results.txt
+	echo 'You will still need to edit /etc/nginx/site-enabled/domain.local.conf to add services'
 	echo '-This is also where you will tell nginx where your SSL certs are located'
 	echo >> results.txt
 
@@ -169,8 +164,8 @@ guac_install(){
 
 	#Select guac functionality
 	local options=("RDP" "SSH" "Telnet" "VNC" "VNC Audio" "Recordings" "SSL/TLS" "Audio Compression" "WebP")
-	to_install="apt-get -y install build-essential libcairo2-dev \${JPEGTURBO} \${LIBPNG} libossp-uuid-dev"
-	to_install="$to_install /${MYSQL} libmysql-java \${TOMCAT}"
+	to_install="apt -y install build-essential libcairo2-dev \${JPEGTURBO} \${LIBPNG} libossp-uuid-dev"
+	to_install="$to_install mysql-server mysql-client mysql-common mysql-utilities libmysql-java \${TOMCAT}"
 	to_install="$to_install freerdp-x11 ghostscript wget dpkg-dev "
 
 	#function to print the menu
@@ -232,7 +227,7 @@ guac_install(){
 	#Change dependencies
 	echo '>>>Replacing dependencies'
 	esc_depend=$(printf '%s\n' "$to_install" | sed 's:[$]:\\$:g')
-	perl -i -pe 'BEGIN{undef $/;} s/apt-get -y install build-essential.*dpkg-dev/'"$esc_depend"'/smg' guac-install.sh
+	perl -i -pe 'BEGIN{undef $/;} s/apt -y install build-essential.*dpkg-dev/'"$esc_depend"'/smg' guac-install.sh
 
 	./guac-install.sh
 	echo '---Guacamole---' >> results.txt
@@ -247,31 +242,22 @@ guac_install(){
 #Install nginx
 nginx_install(){
         echo '>>>Installing nginx'
-	wget https://nginx.org/keys/nginx_signing.key
-	apt-key add nginx_signing.key
+
         #Get nix flavor and version
         source /etc/os-release
         if [[ "${NAME}" == *"Debian"* ]]; then
-                if [[ $PRETTY_NAME = *"stretch"* ]]; then
-                        echo 'deb http://nginx.org/packages/debian/ stretch nginx' >> /etc/apt/sources.list
-                        echo 'deb-src http://nginx.org/packages/debian/ stretch nginx' >> /etc/apt/sources.list
-                fi
-
-		if [[ $PRETTY_NAME = *"buster"* ]]; then
-                        echo 'deb http://nginx.org/packages/debian/ buster nginx' >> /etc/apt/sources.list
-                        echo 'deb-src http://nginx.org/packages/debian/ buster nginx' >> /etc/apt/sources.list
+                if [[ $PRETTY_NAME = *"squeeze"* ]]; then
+                        echo 'deb http://nginx.org/packages/debian/ squeeze nginx' >> /etc/apt/sources.list.d/nginx.$
+                        echo 'deb-src http://nginx.org/packages/debian/ squeeze nginx' >> /etc/apt/sources.list.d/ng$
                 fi
         elif [[ "${NAME}" == "Ubuntu" ]]; then
-		echo "NGINX supports Ubuntu releases 16.04 (xenial), 18.04 (bionic), 18.10 (cosmic), and 19.04 (disco)"
-                read -p 'What release are you using (e.g. disco)? ' varinput
-                echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list
-                echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list
+                read -p 'What release are you using (e.g. bionic)? ' varinput
+                echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.list
+                echo "deb-src http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list.d/nginx.li$
         fi
 
-	apt-get remove nginx-common
-        apt-get update
-        apt-get install -y nginx
-	nginx
+        sudo apt-get update
+        sudo apt-get install -y nginx
 
         echo '>>>Done with nginx'
         echo
@@ -367,12 +353,9 @@ letsencrypt(){
 	misc(){
 		#non-packaged version
 		wget https://dl.eff.org/certbot-auto
-		mv certbot-auto /usr/local/bin/certbot-auto
-		chown root /usr/local/bin/certbot-auto
-		chmod 0755 /usr/local/bin/certbot-auto
-
-		/usr/local/bin/certbot-auto certonly --nginx
-		echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew" | sudo tee -a /etc/crontab > /dev/null
+		chmod a+x certbot-auto
+		mv certbot-auto /opt/certbot-auto
+		/opt/certbot-auto certonly
 
 		echo '---Certbot---' >> results.txt
 		echo 'Your SSL certs are located at:' >> results.txt
@@ -381,7 +364,7 @@ letsencrypt(){
 		echo '/opt/certbot-auto renew' >> /etc/cron.daily/autoupdt
 	}
 	finish(){
-		certbot certonly --nginx
+		certbot certonly
 		echo '---Certbot---' >> results.txt
 		echo 'Your SSL certs are located at:' >> results.txt
 		certbot certificates >> results.txt
@@ -391,24 +374,19 @@ letsencrypt(){
 	#Get nix flavor and version
 	source /etc/os-release
 	if [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]; then
-		if [[ $PRETTY_NAME = *"buster"* ]]; then
-			apt-get -y install python-certbot-nginx
+		if [[ $PRETTY_NAME = *"jessie"* ]] || [[ $PRETTY_NAME = *"stretch"* ]]; then
+			sudo apt-get -y install python-certbot
 			finish
-		elif [[ $PRETTY_NAME = *"stretch"* ]]; then
-			echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
-			apt-get update
-			apt-get -y install certbot python-certbot-nginx -t stretch-backports
 		else
 			misc
 		fi
 	elif [[ "${NAME}" == "Ubuntu" ]]; then
 		case $VERSION_ID in
-			*"18.04"* | *"16.04"*)
-				apt-get -y install software-properties-common;
-				add-apt-repository universe;
+			*"17.04"* | *"16.10"* | *"16.04"* | *"14.04"*)
+				apt-get install software-properties-common;
 				add-apt-repository ppa:certbot/certbot;
 				apt-get update;
-				apt-get -y install certbot python-certbot-nginx;
+				apt-get install certbot;
 				finish;;
 			*)
 				misc;;
@@ -495,7 +473,7 @@ before_reboot(){
 	fi
 
 	if [[ $REBOOT_NEEDED = true ]]; then
-		echo 'Restarting in 10 seconds, please re-run as sudo after logging in.'
+		echo 'Restarting, please re-run as sudo after logging in.'
 		echo 'Press Ctrl+C to cancel and re-login manually'
 		sleep 10
 	else
