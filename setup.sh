@@ -72,6 +72,12 @@ update_sys(){
 }
 
 org_ssl(){
+	#escape the path in the variable then replace
+	#esc_chain=$(printf '%s\n' "${cert_location[0]}" | sed 's:[\/&]:\\&:g;$!s/$/\\/')
+	#esc_key=$(printf '%s\n' "${cert_location[1]}" | sed 's:[\/&]:\\&:g;$!s/$/\\/')
+	#sed -i 's/\/etc.*pem;/'$esc_chain'/' $varinput.conf
+	#sed -i 's/\/etc.*key;/'$esc_key'/' $varinput.conf
+
 	dpkg -s certbot > /dev/null
 	if [ $? -eq 0 ]; then
 		cert_location=($(awk '/live/' certbot.out | awk -F': ' '{ print $2 }'))
@@ -127,11 +133,7 @@ organizer_install(){
 	apt-get install git
 
 	#install dependencies
-	apt-get install -y php7.3-fpm php7.3-mysql php7.3-sqlite3 sqlite3 php7.3-xml php7.3-zip openssl php7.3-curl
-
-	#PHP security upgrade
-	sed -i 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php/7.0/fpm/php.ini
-	systemctl restart php7.3-fpm
+	apt-get install -y php7.3-mysql php7.3-sqlite3 sqlite3 php7.3-xml php7.3-zip openssl php7.3-curl
 
 	git clone https://github.com/causefx/Organizr /var/www/websites/org.$DOMAIN_NAME
 	chown -R www-data:www-data /var/www/websites/org.$DOMAIN_NAME/
