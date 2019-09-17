@@ -78,25 +78,25 @@ update_sys(){
 org_ssl(){
 	dpkg -s certbot > /dev/null
 	if [ $? -eq 0 ]; then
-		cert_location=($(awk '/live/' certbot.out | awk -F': ' '{ print $2 }'))
-	else
 		while true
 		do
-			read -p 'Where is your certificate key? ' cert_location[1]
+			echo "In /etc/letsencrypt/live/ by default"
+			echo "Give the full path"
+			read -p 'Where is your certificate key (.key)? ' cert_location[1]
 			[ -f ${cert_location[1]} ] && break
 			echo "Could not find ${cert_location[1]}, try again..."
 		done
 
 		while true
 		do
-			read -p 'Where is your certificate? ' cert_location[0]
+			read -p 'Where is your certificate (.pem)? ' cert_location[0]
 			[ -f ${cert_location[0]} ] && break
 			echo "Could not find ${cert_location[0]}, try again..."
 		done
 	fi
 
-	sed -i 's:/etc.*pem;:'${cert_location[0]}':' ${DOMAIN_NAME}.conf
-	sed -i 's:/etc.*key;:'${cert_location[1]}':' ${DOMAIN_NAME}.conf
+	sed -i 's:/etc.*pem:'${cert_location[0]}':' ${DOMAIN_NAME}.conf
+	sed -i 's:/etc.*key:'${cert_location[1]}':' ${DOMAIN_NAME}.conf
 	sed -i 's/#ssl_cert/ssl_cert/g' ${DOMAIN_NAME}.conf
 
 	echo '>>>Server SSL updated'
