@@ -1,12 +1,9 @@
 #!/bin/bash
 
-#Auto fix organizr to subdomain
-#figure out order of ssl certs LE and ORG
-
 #Run as sudo
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
-#This supports debian 10 based systems because they changed so much I don't have time to cover more
+#This supports debian 9 based systems because they changed so much I don't have time to cover more
 #You can help expand by submitting a pull request
 source /etc/os-release
 if ! [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]; then
