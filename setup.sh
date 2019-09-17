@@ -185,13 +185,13 @@ nginx_install(){
 	apt-key add nginx_signing.key
         #Get nix flavor and version
         source /etc/os-release
-        if [[ "${NAME}" == *"Debian"* ]]; then
-                if [[ $PRETTY_NAME = *"stretch"* ]]; then
+        if [[ $NAME == *"Debian"* ]]; then
+                if [[ $PRETTY_NAME == *"stretch"* ]]; then
                         echo 'deb http://nginx.org/packages/debian/ stretch nginx' >> /etc/apt/sources.list
                         echo 'deb-src http://nginx.org/packages/debian/ stretch nginx' >> /etc/apt/sources.list
                 fi
 
-        elif [[ "${NAME}" == "Ubuntu" ]]; then
+        elif [[ $NAME == *"Ubuntu"* ]]; then
 		echo "NGINX supports Ubuntu releases 16.04 (xenial), 18.04 (bionic), 18.10 (cosmic), and 19.04 (disco)"
                 read -p 'What release are you using (e.g. disco)? ' varinput
                 echo "deb http://nginx.org/packages/ubuntu/ $varinput nginx" >> /etc/apt/sources.list
@@ -338,8 +338,8 @@ letsencrypt(){
 
 	#Get nix flavor and version
 	source /etc/os-release
-	if [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian"* ]]; then
-		if [[ $PRETTY_NAME = *"stretch"* ]]; then
+	if [[ $NAME == *"Debian"* || $NAME == *"Raspbian"* ]]; then
+		if [[ $PRETTY_NAME == *"stretch"* ]]; then
 			echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
 			apt-get update
 			apt-get -y install certbot python-certbot-nginx -t stretch-backports
@@ -347,7 +347,7 @@ letsencrypt(){
 		else
 			misc
 		fi
-	elif [[ "${NAME}" == "Ubuntu" ]]; then
+	elif [[ $NAME == *"Ubuntu"* ]]; then
 		case $VERSION_ID in
 			*"18.04"* | *"16.04"*)
 				apt-get -y install software-properties-common;
