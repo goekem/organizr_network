@@ -121,7 +121,7 @@ org_subdomain(){
 
         read -p 'What would you like the organizr domain to be (sub.domain.com)? ' varsubdom
         replace_domain="server_name $varsubdom localhost;"
-        sed -i 's/server_name.*host;/'${replace_domain}'/' ${DOMAIN_NAME}.conf
+        sed -i 's/server_name.*host;/'${replace_domain}'/g' ${DOMAIN_NAME}.conf
 }
 
 #Install Organizer/Nginx/PHP
@@ -134,11 +134,16 @@ organizer_install(){
 	apt-get install git
 
 	#install dependencies
-	apt-get install -y php7.0-fpm php7.0-mysql php7.0-sqlite3 sqlite3 php7.0-xml php7.0-zip openssl php7.0-curl
+	apt install -y ca-certificates apt-transport-https
+	wget -q https://packages.sury.org/php/apt.gpg -O- | apt-key add -
+	echo "deb https://packages.sury.org/php/ stretch main" | sudo tee /etc/apt/sources.list.d/php.list
+
+	apt-get update
+	apt-get install -y php7.3-fpm php7.3-mysql php7.3-sqlite3 sqlite3 php7.3-xml php7.3-zip openssl php7.3-curl
 
 	#PHP security upgrade
-	sed -i 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php/7.0/fpm/php.ini
-	systemctl restart php7.0-fpm
+	sed -i 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php/7.3/fpm/php.ini
+	systemctl restart php7.3-fpm
 
 	git clone https://github.com/causefx/Organizr /var/www/websites/org.${DOMAIN_NAME}
 	chown -R www-data:www-data /var/www/websites/org.${DOMAIN_NAME}/
@@ -288,7 +293,11 @@ wol_nginx(){
                 nginx_install
         fi
 
-	apt-get install -y wakeonlan php7.0-fpm
+	apt install -y ca-certificates apt-transport-https
+	wget -q https://packages.sury.org/php/apt.gpg -O- | apt-key add -
+	echo "deb https://packages.sury.org/php/ stretch main" | tee /etc/apt/sources.list.d/php.list
+	apt-get update
+	apt-get install -y wakeonlan php7.3-fpm
 	wol_setup1
 	wol_setup2
 
