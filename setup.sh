@@ -346,6 +346,7 @@ letsencrypt(){
 			echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
 			apt-get update
 			apt-get -y install certbot python-certbot-nginx -t stretch-backports
+			finish
 		else
 			misc
 		fi
