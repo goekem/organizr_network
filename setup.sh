@@ -6,9 +6,9 @@ if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 
 #This supports debian 9 based systems because they changed so much I don't have time to cover more
 #You can help expand by submitting a pull request
 source /etc/os-release
-if [[ "${NAME}" != *"Debian"* ]] || [[ "${NAME}" != *"Raspbian"* ]]; then
+if ! [[ $NAME == *"Debian"* || $NAME == *"Raspbian"* ]]; then
 	echo "Only Debian 9 is officially supported."; exit 1 ;
-elif ! [[ $PRETTY_NAME = *"stretch"* ]]; then
+elif ! [[ $PRETTY_NAME == *"stretch"* ]]; then
 	echo "Only Debian 9 is officially supported."; exit 1 ;
 fi
 
