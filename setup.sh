@@ -121,7 +121,7 @@ org_subdomain(){
 
         read -p 'What would you like the organizr domain to be (sub.domain.com)? ' varsubdom
         replace_domain="server_name $varsubdom localhost;"
-        sed -i 's/server_name.*host;/'${replace_domain}'/g' ${DOMAIN_NAME}.conf
+        sed -i "s/server_name.*host;/${replace_domain}/g" "${DOMAIN_NAME}.conf"
 }
 
 #Install Organizer/Nginx/PHP
